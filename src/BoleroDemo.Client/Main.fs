@@ -8,6 +8,8 @@ open Bolero.Remoting
 open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
+open DemoHtmlTemplate
+
 /// Routing endpoints definition.
 type Page =
     | [<EndPoint "/">] Home
@@ -153,14 +155,11 @@ let counterPage model dispatch =
         .Value(model.counter, fun v -> dispatch (SetCounter v))
         .Elt()
 
-let htmlTemplatePage model dispatch =
-    Main.DemoHtmlTemplate().Elt()
-
-let fsharpTemplateElement (title: string) (text: string) model dispatch = 
-   div {
-       h1 { $"{title}"}
-       h1 { $"{text}"}
-   }
+// let fsharpTemplateElement (title: string) (text: string) model dispatch = 
+//    div {
+//        h1 { $"{title}"}
+//        h1 { $"{text}"}
+//    }
 
 let dataPage model (username: string) dispatch =
     Main.Data()
