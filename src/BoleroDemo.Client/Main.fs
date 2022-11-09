@@ -9,6 +9,7 @@ open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
 open DemoHtmlTemplate
+open DemoFsharpTemplate
 
 /// Routing endpoints definition.
 type Page =
