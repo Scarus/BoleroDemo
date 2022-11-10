@@ -142,22 +142,31 @@ let router = Router.infer SetPage (fun model -> model.page)
 type Main = Template<"wwwroot/main.html">
 
 // Fsharp Template
-let viewInput model setValue =
+let viewInputFsharp model placeholder setValue =
     input {
         attr.value model
+        attr.``class`` "input"
+        attr.placeholder placeholder
         on.change (fun e -> setValue (unbox e.Value))
     }
 
 let demoFsharpTemplatePage model dispatch =
     div {
-        viewInput model.firstName (fun n -> dispatch (SetFirstName n))
-        viewInput model.lastName (fun n -> dispatch (SetLastName n))
-        $"Hello, {model.firstName} {model.lastName}!"
+        h1 {
+            attr.``class`` "title"
+            "Please allow me to introduce myself ..."
+        }
+        div {
+            viewInputFsharp model.firstName "first name" (fun n -> dispatch (SetFirstName n))
+            viewInputFsharp model.lastName "last name" (fun n -> dispatch (SetLastName n))
+            p { 
+                        $"Hello, {model.firstName} {model.lastName}!"
+            }
+        }
     }
 
-
 // HTML template 
-let htmlTemplatePage model dispatch =
+let demoHtmlTemplatePage model dispatch =
     Main.DemoHtmlTemplate()
         .FirstName(model.firstName, fun n -> dispatch (SetFirstName n))
         .LastName(model.lastName, fun n -> dispatch (SetLastName n))
@@ -216,7 +225,7 @@ let view model dispatch =
         .Body(
             cond model.page <| function
             | DemofsharpTemplate -> demoFsharpTemplatePage model dispatch
-            | DemoHtmlTemplate -> htmlTemplatePage model dispatch
+            | DemoHtmlTemplate -> demoHtmlTemplatePage model dispatch
             | Data ->
                 cond model.signedInAs <| function
                 | Some username -> dataPage model username dispatch
