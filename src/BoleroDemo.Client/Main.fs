@@ -8,10 +8,9 @@ open Bolero.Remoting
 open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
-open DemoHtmlTemplate
-
 /// Routing endpoints definition.
 type Page =
+    | [<EndPoint "/demoFsharpTemplate">] DemofsharpTemplate
     | [<EndPoint "/demoHtmlTemplate">] DemoHtmlTemplate
     | [<EndPoint "/data">] Data
 
@@ -25,6 +24,9 @@ type Model =
         password: string
         signedInAs: option<string>
         signInFailed: bool
+
+        firstName: string
+        lastName: string
     }
 
 and Book =
@@ -37,13 +39,16 @@ and Book =
 
 let initModel =
     {
-        page = DemoHtmlTemplate
+        page = DemofsharpTemplate
         books = None
         error = None
         username = ""
         password = ""
         signedInAs = None
         signInFailed = false
+
+        firstName = ""
+        lastName = ""
     }
 
 /// Remote service definition.
@@ -86,6 +91,9 @@ type Message =
     | RecvSignOut
     | Error of exn
     | ClearError
+    
+    | SetFirstName of string
+    | SetLastName of string
 
 let update remote message model =
     let onSignIn = function
@@ -124,12 +132,39 @@ let update remote message model =
         { model with error = Some exn.Message }, Cmd.none
     | ClearError ->
         { model with error = None }, Cmd.none
+        
+    | SetFirstName n -> { model with firstName = n }, Cmd.none
+    | SetLastName n -> { model with lastName = n }, Cmd.none
 
 /// Connects the routing system to the Elmish application.
 let router = Router.infer SetPage (fun model -> model.page)
 
 type Main = Template<"wwwroot/main.html">
 
+// Fsharp Template
+let viewInput model setValue =
+    input {
+        attr.value model
+        on.change (fun e -> setValue (unbox e.Value))
+    }
+
+let demoFsharpTemplatePage model dispatch =
+    div {
+        viewInput model.firstName (fun n -> dispatch (SetFirstName n))
+        viewInput model.lastName (fun n -> dispatch (SetLastName n))
+        $"Hello, {model.firstName} {model.lastName}!"
+    }
+
+
+// HTML template 
+let htmlTemplatePage model dispatch =
+    Main.DemoHtmlTemplate()
+        .FirstName(model.firstName, fun n -> dispatch (SetFirstName n))
+        .LastName(model.lastName, fun n -> dispatch (SetLastName n))
+        .Elt()
+    
+
+// Remote query demo
 let dataPage model (username: string) dispatch =
     Main.Data()
         .Reload(fun _ -> dispatch GetBooks)
@@ -174,11 +209,13 @@ let menuItem (model: Model) (page: Page) (text: string) =
 let view model dispatch =
     Main()
         .Menu(concat {
+            menuItem model DemofsharpTemplate "DemoFsharpTemplate"
             menuItem model DemoHtmlTemplate "DemoHtmlTemplate"
             menuItem model Data "Download data"
         })
         .Body(
             cond model.page <| function
+            | DemofsharpTemplate -> demoFsharpTemplatePage model dispatch
             | DemoHtmlTemplate -> htmlTemplatePage model dispatch
             | Data ->
                 cond model.signedInAs <| function
@@ -195,7 +232,6 @@ let view model dispatch =
                     .Elt()
         )
         .Elt()
-
 type MyApp() =
     inherit ProgramComponent<Model, Message>()
 

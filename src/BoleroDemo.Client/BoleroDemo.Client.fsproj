@@ -4,8 +4,6 @@
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="DemoFsharpTemplate/DemoFsharpTemplate.fs" />
-    <Compile Include="DemoHtmlTemplate/DemoHtmlTemplate.fs" />
     <Compile Include="Main.fs" />
     <Compile Include="Startup.fs" />
   </ItemGroup>
