@@ -9,21 +9,16 @@ open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
 open DemoHtmlTemplate
-open DemoFsharpTemplate
 
 /// Routing endpoints definition.
 type Page =
-    | [<EndPoint "/">] Home
-    | [<EndPoint "/counter">] Counter
-    | [<EndPoint "/data">] Data
     | [<EndPoint "/demoHtmlTemplate">] DemoHtmlTemplate
-    | [<EndPoint "/demoPlainFsharpHtml">] FsharpHtmlTemplate
+    | [<EndPoint "/data">] Data
 
 /// The Elmish application's model.
 type Model =
     {
         page: Page
-        counter: int
         books: Book[] option
         error: string option
         username: string
@@ -42,8 +37,7 @@ and Book =
 
 let initModel =
     {
-        page = Home
-        counter = 0
+        page = DemoHtmlTemplate
         books = None
         error = None
         username = ""
@@ -80,9 +74,6 @@ type BookService =
 /// The Elmish application's update messages.
 type Message =
     | SetPage of Page
-    | Increment
-    | Decrement
-    | SetCounter of int
     | GetBooks
     | GotBooks of Book[]
     | SetUsername of string
@@ -103,13 +94,6 @@ let update remote message model =
     match message with
     | SetPage page ->
         { model with page = page }, Cmd.none
-
-    | Increment ->
-        { model with counter = model.counter + 1 }, Cmd.none
-    | Decrement ->
-        { model with counter = model.counter - 1 }, Cmd.none
-    | SetCounter value ->
-        { model with counter = value }, Cmd.none
 
     | GetBooks ->
         let cmd = Cmd.OfAsync.either remote.getBooks () GotBooks Error
@@ -145,22 +129,6 @@ let update remote message model =
 let router = Router.infer SetPage (fun model -> model.page)
 
 type Main = Template<"wwwroot/main.html">
-
-let homePage model dispatch =
-    Main.Home().Elt()
-
-let counterPage model dispatch =
-    Main.Counter()
-        .Decrement(fun _ -> dispatch Decrement)
-        .Increment(fun _ -> dispatch Increment)
-        .Value(model.counter, fun v -> dispatch (SetCounter v))
-        .Elt()
-
-// let fsharpTemplateElement (title: string) (text: string) model dispatch = 
-//    div {
-//        h1 { $"{title}"}
-//        h1 { $"{text}"}
-//    }
 
 let dataPage model (username: string) dispatch =
     Main.Data()
@@ -206,18 +174,12 @@ let menuItem (model: Model) (page: Page) (text: string) =
 let view model dispatch =
     Main()
         .Menu(concat {
-            menuItem model Home "Home"
-            menuItem model Counter "Counter"
-            menuItem model Data "Download data"
             menuItem model DemoHtmlTemplate "DemoHtmlTemplate"
-            menuItem model FsharpHtmlTemplate "DemoFsharpTemplate"
+            menuItem model Data "Download data"
         })
         .Body(
             cond model.page <| function
-            | Home -> homePage model dispatch
-            | Counter -> counterPage model dispatch
             | DemoHtmlTemplate -> htmlTemplatePage model dispatch
-            | FsharpHtmlTemplate -> fsharpTemplateElement "Hello there !" "This part has no html involved at all ..." model dispatch
             | Data ->
                 cond model.signedInAs <| function
                 | Some username -> dataPage model username dispatch
